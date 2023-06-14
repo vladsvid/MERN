@@ -1,16 +1,9 @@
-header {
-  background: #000;
-  padding: 2rem;
-  font-size: 2rem;
-}
-main {
-  padding: 1rem;
+.site-containter {
+  min-height: 100vh;
 }
 
-header a {
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
+main {
+  flex: 1;
 }
 
 .products {
