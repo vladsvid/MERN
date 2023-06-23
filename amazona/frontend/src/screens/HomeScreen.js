@@ -31,6 +31,7 @@ const HomeScreen = () => {
     loading: false,
     error: ""
   });
+
   // const [products, setProducts] = useState([]);
   useEffect(() => {
     dispatch({ type: "FETCH_REQUEST" });
@@ -45,6 +46,7 @@ const HomeScreen = () => {
     };
     fetchData();
   }, []);
+
   return (
     <div>
       <Helmet>
