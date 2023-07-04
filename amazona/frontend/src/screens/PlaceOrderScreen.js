@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 import CheckoutSteps from "./../components/CheckoutSteps";
 import { Helmet } from "react-helmet-async";
 import Row from "react-bootstrap/Row";
@@ -7,9 +7,31 @@ import Card from "react-bootstrap/Card";
 import { Store } from "./../Store";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, ListGroup } from "react-bootstrap";
+import { toast } from "react-toastify";
+import getError from "../utils";
+import axios from "axios";
+import LoadingBox from "../components/LoadingBox";
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "CREATE_REQUEST":
+      return { ...state, loading: true };
+    case "CREATE_SUCCESS":
+      return { ...state, loading: false };
+    case "CREATE_FAIL":
+      return { ...state, loading: false };
+    default:
+      return state;
+  }
+};
 
 const PlaceOrderScreen = () => {
   const navigate = useNavigate();
+
+  const [{ loading }, dispatch] = useReducer(reducer, {
+    loading: false
+  });
+
   const { state, dispatch: ctxDispatch } = useContext(Store);
 
   const { cart, userInfo } = state;
@@ -25,7 +47,34 @@ const PlaceOrderScreen = () => {
   cart.taxPrice = round2(cart.itemsPrice * 0.2);
   cart.totalPrice = cart.itemsPrice + cart.shippingPrice + cart.taxPrice;
 
-  const placeOrderHandler = () => {};
+  const placeOrderHandler = async () => {
+    try {
+      dispatch({ type: "CREATE_REQUEST" });
+      const { data } = await axios.post(
+        "/api/orders",
+        {
+          orderItems: cart.cartItems,
+          shippingAddress: cart.shippingAddress,
+          paymentMethod: cart.paymentMethod,
+          itemsPrice: cart.itemsPrice,
+          shippingPrice: cart.shippingPrice,
+          taxPrice: cart.taxPrice,
+          totalPrice: cart.totalPrice
+        },
+        {
+          headers: { authorization: `Bearer ${userInfo.token}` } // find out more about it
+        }
+      );
+      ctxDispatch({ type: "CART_CLEAR" });
+      dispatch({ type: "CREATE_SUCCESS" });
+      localStorage.removeItem("cartItems");
+      console.log("Data", data);
+      navigate(`/order/${data.order._id}`);
+    } catch (error) {
+      dispatch({ type: "CREATE_FAIL" });
+      toast.error(getError(error));
+    }
+  };
 
   useEffect(() => {
     if (!cart.paymentMethod) {
@@ -123,11 +172,12 @@ const PlaceOrderScreen = () => {
                   <div className="d-grid">
                     <Button
                       type="button"
-                      // onClick={placeOrderHandler}
+                      onClick={placeOrderHandler}
                       disabled={cart.cartItems.length === 0}
                     >
                       Place Order
                     </Button>
+                    {loading && <LoadingBox></LoadingBox>}
                   </div>
                 </ListGroup.Item>
               </ListGroup>
