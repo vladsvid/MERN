@@ -154,7 +154,7 @@ const OrderScreen = () => {
             <Card.Body>
               <Card.Title>Payment</Card.Title>
               <Card.Text>
-                <strong>Method:</strong> {order.paymemntMethod}
+                <strong>Method:</strong> {order.paymentMethod}
               </Card.Text>
               {order.isPaid ? (
                 <MessageBox variant="success">
